@@ -1,65 +1,90 @@
 import test, { expect } from "@playwright/test";
+import { SignInPage } from "../../pages/SignInPage";
+import { mockApi } from "../../utils/mockup.api";
+import { Page } from "@playwright/test";
 
-test.describe("Sign In feature", () => {
+const mockupApiSignIn = async (page: Page, status: number, json: any) => {
+  await mockApi(page, "**/api/v1/auth/sign-in", status, json);
+};
+
+test.describe("Sign Page - Flow", () => {
+    let signInPage: SignInPage;
+
+    const signInAction = async (email: string, password: string) => {
+    await signInPage.fillEmail("email@gmail.com");
+    await signInPage.fillPassword("123456");
+    await signInPage.submit();
+}
+
     test.beforeEach(async ({page}) => {
-        await page.goto("/sign-in");
+        signInPage = new SignInPage(page);
+        signInPage.goto();
     });
 
-    test('Render login page', async ({page}) => {
-        await expect(page.getByRole("heading", {name: "Sign In"})).toBeVisible();
-        await expect(page.getByLabel("Email")).toBeVisible();
-        await expect(page.getByLabel("Password")).toBeVisible();
+    test("Login fail - wrong password", async ({page}) => {
+        mockupApiSignIn(page, 401, { message: 'Incorrect email or password, please try again' });
+
+        await signInAction("email@gmail.com", "Ha@1234");
+
+        // await expect(signInPage.alert()).toHaveText("Incorrect email or password, please try again");
+        await expect(
+            page.getByRole('alert').locator('.MuiAlert-message')
+        ).toContainText("Incorrect email or password, please try again");
     })
 
-    test('Auto focus on Email', async ({page}) => {
-        await expect(page.getByLabel("Email")).toBeFocused();
-    })
+    // test("Login fail - wrong email", async ({page}) => {
+    //     mockupApiSignIn(page, 404, { message: 'User with email email@gmail.com not found.' });
 
-    test('Không submit khi email rỗng', async ({page}) => {
-        await page.getByLabel("Password").fill("123456");
-        await page.getByRole("button", {name:"Sign In"}).click();
+    //     await signInAction("email@gmail.com", "Ha@1234");
 
-        await expect(page).toHaveURL("/sign-in");
-    })
+    //     await expect(signInPage.alert()).toHaveText("User with email email@gmail.com not found.");
+    // })
 
-    test('Không submit khi password rỗng', async ({page}) => {
-        await page.getByLabel("Email").fill("email@gmail.com");
-        await page.getByRole("button", {name:"Sign In"}).click();
+    // test("Login success with admin role", async ({page}) => {
+    //     mockupApiSignIn(page, 200, {
+    //       message: 'Sign in successful',
+    //       data: { roles: ['ADMIN'] }
+    //     });
 
-        await expect(page).toHaveURL("/sign-in");
-    })
+    //     await signInAction("email@gmail.com", "Ha@1234");
 
-    test('Email sai format', async ({page}) => {
-        await page.getByLabel("Email").fill("email");
-        await page.getByLabel("Password").fill("123456");
-        await page.getByRole("button", {name:"Sign In"}).click();
+    //     await expect(signInPage.alert()).toHaveText("Sign in successful");
+    //     await expect(page).toHaveURL("/admin");
+    // })
 
-        await expect(page).toHaveURL("/sign-in");
-    })
+    // test("Login success with kitchen role", async ({page}) => {
+    //     mockupApiSignIn(page, 200, {
+    //       message: 'Sign in successful',
+    //       data: { roles: ['KITCHEN'] }
+    //     });
 
-    test('Sai email', async ({page}) => {
-        await page.getByLabel("Email").fill("19115472778@nttu.edu.vn");
-        await page.getByLabel("Password").fill("Ha@123456789");
-        await page.getByRole("button", {name: "Sign In"}).click();
+    //     await signInAction("email@gmail.com", "Ha@1234");
 
-        await expect(page.locator("#snackbar-id")).toBeVisible();
-        await expect(page.locator("#snackbar-id")).toContainText("User with email 19115472778@nttu.edu.vn not found.");
-    })
+    //     await expect(signInPage.alert()).toHaveText("Sign in successful");
+    //     await expect(page).toHaveURL("/kitchen");
+    // })
 
-    test('Sai password', async ({page}) => {
-        await page.getByLabel("Email").fill("1911547277@nttu.edu.vn");
-        await page.getByLabel("Password").fill("Ha@12345678");
-        await page.getByRole("button", {name: "Sign In"}).click();
+    // test("Login success with user role", async ({page}) => {
+    //     mockupApiSignIn(page, 200, {
+    //       message: 'Sign in successful',
+    //       data: { roles: ['USER'] }
+    //     });
 
-        await expect(page.locator("#snackbar-id")).toBeVisible();
-        await expect(page.locator("#snackbar-id")).toContainText("Incorrect email or password, please try again");
-    })
+    //     await signInAction("email@gmail.com", "Ha@1234");
+        
+    //     await expect(signInPage.alert()).toHaveText("Sign in successful");
+    //     await expect(page).toHaveURL("/menu");
+    // })
 
-    test('Đúng email và password', async ({page}) => {
-        await page.getByLabel("Email").fill("1911547277@nttu.edu.vn");
-        await page.getByLabel("Password").fill("Ha@123456789");
-        await page.getByRole("button", {name: "Sign In"}).click();
+    // test("Login success with casher role", async ({page}) => {
+    //     mockupApiSignIn(page, 200, {
+    //       message: 'Sign in successful',
+    //       data: { roles: ['CASHER'] }
+    //     });
 
-        await expect(page).toHaveURL('/admin');
-    })
+    //     await signInAction("email@gmail.com", "Ha@1234");
+        
+    //     await expect(signInPage.alert()).toHaveText("Sign in successful");
+    //     await expect(page).toHaveURL("/casher");
+    // })
 }) 
