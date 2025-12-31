@@ -11,80 +11,73 @@ test.describe("Sign Page - Flow", () => {
     let signInPage: SignInPage;
 
     const signInAction = async (email: string, password: string) => {
-    await signInPage.fillEmail("email@gmail.com");
-    await signInPage.fillPassword("123456");
-    await signInPage.submit();
-}
-
+        await signInPage.fillEmail("email@gmail.com");
+        await signInPage.fillPassword("123456");
+        await signInPage.submit();
+    }
     test.beforeEach(async ({page}) => {
         signInPage = new SignInPage(page);
-        signInPage.goto();
+        await signInPage.goto();    
     });
 
     test("Login fail - wrong password", async ({page}) => {
-        mockupApiSignIn(page, 401, { message: 'Incorrect email or password, please try again' });
+        await mockupApiSignIn(page, 401, { message: 'Incorrect email or password, please try again' });
+        await signInAction("email@gmail.com", "Ha@1234");
+
+        await expect(signInPage.alert()).toHaveText("Incorrect email or password, please try again");
+    });
+
+    test("Login fail - wrong email", async ({page}) => {
+        mockupApiSignIn(page, 404, { message: 'User with email email@gmail.com not found.' });
 
         await signInAction("email@gmail.com", "Ha@1234");
 
-        // await expect(signInPage.alert()).toHaveText("Incorrect email or password, please try again");
-        await expect(
-            page.getByRole('alert').locator('.MuiAlert-message')
-        ).toContainText("Incorrect email or password, please try again");
+        await expect(signInPage.alert()).toHaveText("User with email email@gmail.com not found.");
     })
 
-    // test("Login fail - wrong email", async ({page}) => {
-    //     mockupApiSignIn(page, 404, { message: 'User with email email@gmail.com not found.' });
+    test("Login success with admin role", async ({page}) => {
+        mockupApiSignIn(page, 200, {
+          message: 'Sign in successful',
+          data: { roles: ['ADMIN'] }
+        });
 
-    //     await signInAction("email@gmail.com", "Ha@1234");
+        await signInAction("email@gmail.com", "Ha@1234");
 
-    //     await expect(signInPage.alert()).toHaveText("User with email email@gmail.com not found.");
-    // })
+        await expect(page).toHaveURL("/admin");
+    })
 
-    // test("Login success with admin role", async ({page}) => {
-    //     mockupApiSignIn(page, 200, {
-    //       message: 'Sign in successful',
-    //       data: { roles: ['ADMIN'] }
-    //     });
+    test("Login success with kitchen role", async ({page}) => {
+        mockupApiSignIn(page, 200, {
+          message: 'Sign in successful',
+          data: { roles: ['KITCHEN'] }
+        });
 
-    //     await signInAction("email@gmail.com", "Ha@1234");
+        await signInAction("email@gmail.com", "Ha@1234");
 
-    //     await expect(signInPage.alert()).toHaveText("Sign in successful");
-    //     await expect(page).toHaveURL("/admin");
-    // })
+        await expect(page).toHaveURL("/kitchen/orders");
+    })
 
-    // test("Login success with kitchen role", async ({page}) => {
-    //     mockupApiSignIn(page, 200, {
-    //       message: 'Sign in successful',
-    //       data: { roles: ['KITCHEN'] }
-    //     });
+    test("Login success with user role", async ({page}) => {
+        mockupApiSignIn(page, 200, {
+          message: 'Sign in successful',
+          data: { roles: ['USER'] }
+        });
 
-    //     await signInAction("email@gmail.com", "Ha@1234");
+        await signInAction("email@gmail.com", "Ha@1234");
+    
 
-    //     await expect(signInPage.alert()).toHaveText("Sign in successful");
-    //     await expect(page).toHaveURL("/kitchen");
-    // })
+        await expect(page).toHaveURL("/menu");
+    })
 
-    // test("Login success with user role", async ({page}) => {
-    //     mockupApiSignIn(page, 200, {
-    //       message: 'Sign in successful',
-    //       data: { roles: ['USER'] }
-    //     });
+    test("Login success with casher role", async ({page}) => {
+        mockupApiSignIn(page, 200, {
+          message: 'Sign in successful',
+          data: { roles: ['CASHER'] }
+        });
 
-    //     await signInAction("email@gmail.com", "Ha@1234");
-        
-    //     await expect(signInPage.alert()).toHaveText("Sign in successful");
-    //     await expect(page).toHaveURL("/menu");
-    // })
+        await signInAction("email@gmail.com", "Ha@1234");
+    
 
-    // test("Login success with casher role", async ({page}) => {
-    //     mockupApiSignIn(page, 200, {
-    //       message: 'Sign in successful',
-    //       data: { roles: ['CASHER'] }
-    //     });
-
-    //     await signInAction("email@gmail.com", "Ha@1234");
-        
-    //     await expect(signInPage.alert()).toHaveText("Sign in successful");
-    //     await expect(page).toHaveURL("/casher");
-    // })
+        await expect(page).toHaveURL("/casher/orders");
+    })
 }) 

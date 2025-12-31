@@ -4,17 +4,15 @@ export class SignInPage {
   constructor(private page: Page) {}
 
   async goto() {
-    await this.page.goto('/sign-in', {
-      waitUntil: 'domcontentloaded',
-    });
+    await this.page.goto('/sign-in');
   }
 
   async fillEmail(email: string) {
-    await this.page.getByLabel('Email').fill(email);
+    await this.page.getByLabel('Email').type(email, {delay: 10});
   }
 
   async fillPassword(password: string) {
-    await this.page.getByLabel('Password').fill(password);
+    await this.page.getByLabel('Password').type(password, {delay: 10});
   }
 
   async submit() {
@@ -22,6 +20,6 @@ export class SignInPage {
   }
 
   alert() {
-    return this.page.getByTestId('snackbar-alert').locator('.MuiAlert-message');
+    return this.page.locator('#alert-id');
   }
 }
