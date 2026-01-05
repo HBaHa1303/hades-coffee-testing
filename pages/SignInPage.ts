@@ -16,7 +16,7 @@ export class SignInPage {
   }
 
   async submit() {
-    await this.page.getByRole('button', { name: 'Sign In' }).click();
+    await this.page.getByRole('button', { name: 'Sign In' }).click({delay: 50});
   }
 
   alert() {

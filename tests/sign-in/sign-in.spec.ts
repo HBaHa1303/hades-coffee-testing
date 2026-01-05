@@ -11,8 +11,8 @@ test.describe("Sign Page - Flow", () => {
     let signInPage: SignInPage;
 
     const signInAction = async (email: string, password: string) => {
-        await signInPage.fillEmail("email@gmail.com");
-        await signInPage.fillPassword("123456");
+        await signInPage.fillEmail(email);
+        await signInPage.fillPassword(password);
         await signInPage.submit();
     }
     test.beforeEach(async ({page}) => {
@@ -41,6 +41,14 @@ test.describe("Sign Page - Flow", () => {
           data: { roles: ['ADMIN'] }
         });
 
+        await page.route('**/private/api/v1/stats/revenue', route =>
+          route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({ data: {day: 0, week: 0, month: 0} })
+          })
+        );
+
         await signInAction("email@gmail.com", "Ha@1234");
 
         await expect(page).toHaveURL("/admin");
@@ -51,6 +59,14 @@ test.describe("Sign Page - Flow", () => {
           message: 'Sign in successful',
           data: { roles: ['KITCHEN'] }
         });
+
+        await page.route('**/private/api/v1/orders**', route =>
+          route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({ data: [] })
+          })
+        );
 
         await signInAction("email@gmail.com", "Ha@1234");
 
@@ -65,7 +81,6 @@ test.describe("Sign Page - Flow", () => {
 
         await signInAction("email@gmail.com", "Ha@1234");
     
-
         await expect(page).toHaveURL("/menu");
     })
 
@@ -75,9 +90,16 @@ test.describe("Sign Page - Flow", () => {
           data: { roles: ['CASHER'] }
         });
 
+        await page.route('**/private/api/v1/orders**', route =>
+          route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({ data: [] })
+          })
+        );
+        
         await signInAction("email@gmail.com", "Ha@1234");
     
-
         await expect(page).toHaveURL("/casher/orders");
     })
 }) 
